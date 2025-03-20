@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KomikPop - Website Komik Populer</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    /* Reset & Dasar */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: Arial, sans-serif; background: #f4f4f4; transition: background 0.3s, color 0.3s; }
+    body.dark-mode { background: #121212; color: #fff; }
+    
+    /* Header & Navigation */
+    header {
+      background: #333;
+      color: #fff;
+      padding: 15px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 999;
+    }
+    .logo { font-size: 24px; font-weight: bold; }
+    nav ul { list-style: none; display: flex; gap: 20px; }
+    nav ul li a { color: #fff; text-decoration: none; }
+    .menu-toggle { display: none; cursor: pointer; font-size: 24px; }
+    @media (max-width:768px) {
+      nav ul { display: none; flex-direction: column; width: 100%; background: #333; }
+      nav ul.active { display: flex; }
+      .menu-toggle { display: block; }
+    }
+    
+    /* Popup Welcome */
+    .popup {
+      background: #333;
+      color: #fff;
+      padding: 10px;
+      text-align: center;
+    }
+    
+    /* Filters & Search */
+    .filters {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      padding: 20px;
+      background: #fff;
+      flex-wrap: wrap;
+    }
+    .filters input, .filters select, .filters button {
+      padding: 10px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    
+    /* Cards Grid */
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 20px;
+      padding: 20px;
+    }
+    .card {
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      overflow: hidden;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+    .card:hover { transform: translateY(-5px); }
+    .card img { width: 100%; height: 300px; object-fit: cover; }
+    .info { padding: 10px; }
+    .info h3 { font-size: 18px; margin-bottom: 5px; }
+    .info p { font-size: 14px; color: #666; margin-bottom: 5px; }
+    .stars { color: gold; }
+    
+    /* Pagination */
+    .pagination {
+      display: flex;
+      justify-content: center;
+      padding: 20px;
+      gap: 10px;
+    }
+    .pagination button {
+      padding: 10px 15px;
+      font-size: 16px;
+      cursor: pointer;
+      border: none;
+      background: #333;
+      color: #fff;
+      border-radius: 5px;
+    }
+    .pagination button:hover { background: #555; }
+    
+    /* Modal Detail Komik */
+    .modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+    .modal-content {
+      background: #fff;
+      padding: 20px;
+      border-radius: 5px;
+      width: 90%;
+      max-width: 500px;
+      position: relative;
+    }
+    .modal-content .close {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      font-size: 24px;
+      cursor: pointer;
+    }
+    .modal-content img { width: 100%; border-radius: 5px; }
+    .modal-content p { margin: 10px 0; }
+    .modal-content .stars { color: gold; cursor: pointer; }
+    .modal-content .stars span { font-size: 24px; }
+    .modal-content button {
+      margin: 10px 0;
+      padding: 10px;
+      width: 100%;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    /* Komentar */
+    #commentsSection { margin-top: 20px; }
+    #commentsSection h3 { margin-bottom: 10px; }
+    #commentsList { max-height: 200px; overflow-y: auto; margin-bottom: 10px; }
+    #commentsList .comment { border-bottom: 1px solid #ddd; padding: 5px 0; }
+    #commentInput { width: 100%; padding: 10px; margin-bottom: 10px; }
+    
+    /* Modal Login & Register */
+    .modal-form {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+    .form-content {
+      background: #fff;
+      padding: 20px;
+      border-radius: 5px;
+      width: 90%;
+      max-width: 400px;
+      position: relative;
+    }
+    .form-content .close {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      font-size: 24px;
+      cursor: pointer;
+    }
+    .form-content form {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .form-content input {
+      padding: 10px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    .form-content button {
+      padding: 10px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    
+    /* Dark Mode Overrides */
+    body.dark-mode { background: #121212; color: #fff; }
+    body.dark-mode header { background: #111; }
+    body.dark-mode .popup, body.dark-mode .filters { background: #222; }
+    body.dark-mode .card { background: #2c2c2c; border-color: #444; }
+    body.dark-mode .modal-content { background: #2c2c2c; color: #fff; }
+    body.dark-mode .form-content { background: #2c2c2c; color: #fff; }
+  </style>
+</head>
+<body>
+  <!-- Header & Navigation -->
+  <header>
+    <div class="logo">KomikPop</div>
+    <nav>
+      <ul id="nav-links">
+        <li><a href="#">Beranda</a></li>
+        <li><a href="#">Favorit</a></li>
+        <li><a href="#">Genre</a></li>
+        <li><a href="#">Tentang</a></li>
+        <li><a href="#" id="loginLink">Login</a></li>
+      </ul>
+      <div class="menu-toggle" id="menu-toggle">☰</div>
+    </nav>
+  </header>
+  
+  <!-- Popup Welcome -->
+  <div class="popup" id="popup">Selamat datang di KomikPop!</div>
+  
+  <!-- Filters & Search -->
+  <div class="filters">
+    <input type="text" id="searchInput" placeholder="Cari Komik...">
+    <select id="genreFilter">
+      <option value="all">Semua Genre</option>
+      <option value="action">Action</option>
+      <option value="romance">Romance</option>
+      <option value="isekai">Isekai</option>
+      <option value="comedy">Comedy</option>
+    </select>
+    <button id="darkToggle">Dark Mode</button>
+  </div>
+  
+  <!-- Cards List -->
+  <div class="cards" id="komikList"></div>
+  
+  <!-- Pagination -->
+  <div class="pagination" id="pagination"></div>
+  
+  <!-- Modal Detail Komik -->
+  <div class="modal" id="komikModal">
+    <div class="modal-content">
+      <span class="close" id="closeModal">&times;</span>
+      <h2 id="modalTitle"></h2>
+      <img id="modalImage" src="" alt="Cover">
+      <p id="modalDesc"></p>
+      <div id="modalRating"></div>
+      <button id="favBtn">Tambah ke Favorit</button>
+      <div id="shareButtons">
+        <button id="shareFacebook">Share ke Facebook</button>
+        <button id="shareTwitter">Share ke Twitter</button>
+      </div>
+      <div id="commentsSection">
+        <h3>Komentar</h3>
+        <div id="commentsList"></div>
+        <textarea id="commentInput" placeholder="Tulis komentar..."></textarea>
+        <button id="submitComment">Kirim Komentar</button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Modal Login -->
+  <div class="modal-form" id="loginModal">
+    <div class="form-content">
+      <span class="close" id="closeLoginModal">&times;</span>
+      <h2>Login</h2>
+      <form id="loginForm">
+        <input type="text" id="username" placeholder="Username" required>
+        <input type="password" id="password" placeholder="Password" required>
+        <button type="submit">Login</button>
+      </form>
+      <p>Belum punya akun? <a href="#" id="registerLink">Daftar di sini</a></p>
+    </div>
+  </div>
+  
+  <!-- Modal Register -->
+  <div class="modal-form" id="registerModal">
+    <div class="form-content">
+      <span class="close" id="closeRegisterModal">&times;</span>
+      <h2>Register</h2>
+      <form id="registerForm">
+        <input type="text" id="regUsername" placeholder="Username" required>
+        <input type="email" id="regEmail" placeholder="Email" required>
+        <input type="password" id="regPassword" placeholder="Password" required>
+        <button type="submit">Daftar</button>
+      </form>
+    </div>
+  </div>
+  
+  <script>
+    // Data Komik (dengan cerita lengkap)
+    const komikData = [
+      {
+        title: "One Piece",
+        genre: "action",
+        img: "https://upload.wikimedia.org/wikipedia/en/6/65/One_Piece_Logo.png",
+        desc: "One Piece menceritakan petualangan Monkey D. Luffy, bajak laut muda dengan tubuh karet, yang berlayar mencari harta karun legendaris 'One Piece' demi menjadi Raja Bajak Laut. Dalam perjalanannya, ia bertemu dengan berbagai karakter unik, menghadapi musuh kuat, dan mengungkap misteri dunia yang luas bersama kru Topi Jerami.",
+        rating: 5
+      },
+      {
+        title: "Naruto",
+        genre: "action",
+        img: "https://upload.wikimedia.org/wikipedia/id/9/94/NarutoCoverTankobon1.jpg",
+        desc: "Naruto mengikuti perjalanan Naruto Uzumaki, seorang ninja yang dikucilkan karena tersegel dalam dirinya rubah berekor sembilan. Dengan tekad kuat untuk menjadi Hokage dan mendapatkan pengakuan, Naruto menghadapi berbagai tantangan dan musuh demi melindungi desanya.",
+        rating: 5
+      },
+      {
+        title: "Komi-san wa Komyushou desu",
+        genre: "comedy",
+        img: "https://upload.wikimedia.org/wikipedia/en/2/2d/Komi-san_wa%2C_Comyush%C5%8D_desu%2C_volume_1_cover.jpg",
+        desc: "Komi-san wa Komyushou desu mengisahkan Komi Shouko, siswi cantik yang memiliki kesulitan berkomunikasi. Dengan bantuan teman sekelasnya, Tadano Hitohito, ia berusaha mengatasi hambatan sosialnya dan mencapai impian memiliki 100 teman.",
+        rating: 4
+      },
+      {
+        title: "Solo Leveling",
+        genre: "action",
+        img: "https://upload.wikimedia.org/wikipedia/en/0/02/Solo_Leveling_Manhwa_Volume_1.jpg",
+        desc: "Solo Leveling bercerita tentang Sung Jin-Woo, hunter terlemah yang mendapatkan kekuatan misterius setelah mengalami kejadian aneh. Dengan kekuatan baru tersebut, ia berjuang menjadi hunter terkuat dan mengungkap rahasia dungeon yang penuh monster.",
+        rating: 5
+      },
+      {
+        title: "Your Name",
+        genre: "romance",
+        img: "https://upload.wikimedia.org/wikipedia/en/0/0b/Your_Name_poster.png",
+        desc: "Your Name mengisahkan pertemuan ajaib antara Mitsuha dan Taki, dua remaja yang saling bertukar tubuh secara misterius. Ikatan yang terjalin membawa mereka mencari satu sama lain dan mengungkap rahasia yang menghubungkan nasib mereka.",
+        rating: 5
+      },
+      {
+        title: "Re:Zero",
+        genre: "isekai",
+        img: "https://upload.wikimedia.org/wikipedia/en/1/1c/Re_Zero_Volume_1.png",
+        desc: "Re:Zero mengikuti Subaru Natsuki, seorang remaja yang tiba-tiba terjebak di dunia paralel. Setiap kali ia mati, Subaru kembali ke titik tertentu, memberinya kesempatan untuk mengubah nasib, sekaligus menghadapi bahaya dan intrik di dunia baru yang penuh sihir.",
+        rating: 4
+      },
+      {
+        title: "Kaguya-sama",
+        genre: "comedy",
+        img: "https://upload.wikimedia.org/wikipedia/en/c/c9/Kaguya-sama_Wants_to_Be_Confessed_To_volume_1_cover.jpg",
+        desc: "Kaguya-sama: Love is War mengisahkan pertarungan psikologis antara Kaguya Shinomiya dan Miyuki Shirogane, dua anggota dewan OSIS yang sangat cerdas. Mereka saling berusaha membuat yang lain menyatakan perasaan terlebih dahulu, menghasilkan situasi lucu dan penuh strategi cerdik.",
+        rating: 4
+      },
+      {
+        title: "Sword Art Online",
+        genre: "isekai",
+        img: "https://upload.wikimedia.org/wikipedia/en/0/05/Sword_Art_Online_light_novel_volume_1.png",
+        desc: "Sword Art Online mengikuti Kirito, pemain game VRMMO yang terjebak dalam dunia virtual di mana kematian dalam game berarti kematian di dunia nyata. Bersama teman-temannya, Kirito berjuang untuk keluar dari game tersebut dan menyelamatkan nyawa mereka.",
+        rating: 4
+      },
+      {
+        title: "Horimiya",
+        genre: "romance",
+        img: "https://upload.wikimedia.org/wikipedia/en/7/74/Horimiya_volume_1_cover.jpg",
+        desc: "Horimiya menceritakan kisah dua siswa SMA, Hori dan Miyamura, yang pada awalnya tampak berbeda. Seiring berjalannya waktu, mereka menemukan sisi tersembunyi satu sama lain dan membangun hubungan yang hangat serta penuh kejujuran.",
+        rating: 4
+      },
+      {
+        title: "Attack on Titan",
+        genre: "action",
+        img: "https://upload.wikimedia.org/wikipedia/en/7/70/Shingeki_no_Kyojin_manga_volume_1.jpg",
+        desc: "Attack on Titan berlatar di dunia di mana umat manusia hidup dalam tembok besar untuk melindungi diri dari serangan Titan, makhluk raksasa yang memangsa manusia. Cerita mengikuti Eren Yeager dan kawan-kawannya dalam perjuangan epik untuk mengungkap kebenaran dan membebaskan umat manusia.",
+        rating: 5
+      }
+    ];
+    
+    // Elemen DOM
+    const komikList = document.getElementById("komikList");
+    const searchInput = document.getElementById("searchInput");
+    const genreFilter = document.getElementById("genreFilter");
+    const darkToggle = document.getElementById("darkToggle");
+    const menuToggle = document.getElementById("menu-toggle");
+    const navLinks = document.getElementById("nav-links");
+    const popup = document.getElementById("popup");
+    const pagination = document.getElementById("pagination");
+    
+    // Modal Detail Komik
+    const modal = document.getElementById("komikModal");
+    const modalTitle = document.getElementById("modalTitle");
+    const modalImage = document.getElementById("modalImage");
+    const modalDesc = document.getElementById("modalDesc");
+    const modalRating = document.getElementById("modalRating");
+    const favBtn = document.getElementById("favBtn");
+    const shareFacebook = document.getElementById("shareFacebook");
+    const shareTwitter = document.getElementById("shareTwitter");
+    const commentsList = document.getElementById("commentsList");
+    const commentInput = document.getElementById("commentInput");
+    const submitComment = document.getElementById("submitComment");
+    const closeModal = document.getElementById("closeModal");
+    
+    // Modal Login & Register
+    const loginLink = document.getElementById("loginLink");
+    const loginModal = document.getElementById("loginModal");
+    const closeLoginModal = document.getElementById("closeLoginModal");
+    const registerLink = document.getElementById("registerLink");
+    const registerModal = document.getElementById("registerModal");
+    const closeRegisterModal = document.getElementById("closeRegisterModal");
+    
+    // Pagination variables
+    const itemsPerPage = 4;
+    let currentPage = 1;
+    let filteredData = [...komikData];
+    
+    // Render Komik Cards dengan Pagination
+    function renderKomik(data) {
+      komikList.innerHTML = "";
+      const start = (currentPage - 1) * itemsPerPage;
+      const end = start + itemsPerPage;
+      const paginatedItems = data.slice(start, end);
+      paginatedItems.forEach(komik => {
+        const card = document.createElement("div");
+        card.classList.add("card");
+        card.innerHTML = `
+          <img src="${komik.img}" alt="${komik.title}">
+          <div class="info">
+            <h3>${komik.title}</h3>
+            <p>${komik.genre}</p>
+            <div class="stars">${'★'.repeat(komik.rating)}${'☆'.repeat(5 - komik.rating)}</div>
+          </div>
+        `;
+        card.onclick = () => showModal(komik);
+        komikList.appendChild(card);
+      });
+      renderPagination(data);
+    }
+    
+    // Render Pagination Buttons
+    function renderPagination(data) {
+      pagination.innerHTML = "";
+      const totalPages = Math.ceil(data.length / itemsPerPage);
+      for (let i = 1; i <= totalPages; i++) {
+        const btn = document.createElement("button");
+        btn.textContent = i;
+        if (i === currentPage) btn.style.background = "#555";
+        btn.onclick = () => { currentPage = i; renderKomik(filteredData); };
+        pagination.appendChild(btn);
+      }
+    }
+    
+    // Show Modal Detail Komik
+    function showModal(komik) {
+      modalTitle.textContent = komik.title;
+      modalImage.src = komik.img;
+      modalDesc.textContent = komik.desc;
+      modalRating.innerHTML = generateStars(komik.rating);
+      // Load komentar dari localStorage
+      commentsList.innerHTML = localStorage.getItem(komik.title + "_comments") || "";
+      modal.style.display = "flex";
+      // Set tombol share
+      shareFacebook.onclick = () => window.open("https://www.facebook.com/sharer/sharer.php?u=" + encodeURIComponent(window.location.href + "?komik=" + komik.title));
+      shareTwitter.onclick = () => window.open("https://twitter.com/intent/tweet?url=" + encodeURIComponent(window.location.href + "?komik=" + komik.title));
+      favBtn.onclick = () => addToFavorites(komik);
+      submitComment.onclick = () => submitNewComment(komik);
+    }
+    
+    // Generate Stars Rating HTML
+    function generateStars(rating) {
+      let starsHTML = "";
+      for (let i = 1; i <= 5; i++) {
+        starsHTML += `<span class="star ${i <= rating ? 'filled' : ''}" data-rating="${i}">★</span>`;
+      }
+      return starsHTML;
+    }
+    
+    // Add to Favorites
+    function addToFavorites(komik) {
+      let favorites = JSON.parse(localStorage.getItem("favorites")) || [];
+      if (!favorites.some(fav => fav.title === komik.title)) {
+        favorites.push(komik);
+        localStorage.setItem("favorites", JSON.stringify(favorites));
+        alert(`"${komik.title}" ditambahkan ke Favorit!`);
+      } else {
+        alert(`"${komik.title}" sudah ada di Favorit!`);
+      }
+    }
+    
+    // Submit Comment
+    function submitNewComment(komik) {
+      const commentText = commentInput.value.trim();
+      if (commentText !== "") {
+        const commentHTML = `<div class="comment"><strong>User:</strong> ${commentText}</div>`;
+        commentsList.innerHTML += commentHTML;
+        localStorage.setItem(komik.title + "_comments", commentsList.innerHTML);
+        commentInput.value = "";
+      }
+    }
+    
+    // Filter Komik (Search & Genre)
+    function filterKomik() {
+      const searchValue = searchInput.value.toLowerCase();
+      const selectedGenre = genreFilter.value;
+      filteredData = komikData.filter(k => {
+        return (k.title.toLowerCase().includes(searchValue) || k.desc.toLowerCase().includes(searchValue)) &&
+               (selectedGenre === "all" || k.genre === selectedGenre);
+      });
+      currentPage = 1;
+      renderKomik(filteredData);
+    }
+    
+    // Event Listeners
+    searchInput.addEventListener("input", filterKomik);
+    genreFilter.addEventListener("change", filterKomik);
+    darkToggle.addEventListener("click", () => document.body.classList.toggle("dark-mode"));
+    menuToggle.addEventListener("click", () => navLinks.classList.toggle("active"));
+    document.getElementById("closeModal").addEventListener("click", () => modal.style.display = "none");
+    
+    // Login & Register Modal Events
+    loginLink.addEventListener("click", () => document.getElementById("loginModal").style.display = "flex");
+    document.getElementById("closeLoginModal").addEventListener("click", () => document.getElementById("loginModal").style.display = "none");
+    registerLink.addEventListener("click", () => {
+      document.getElementById("loginModal").style.display = "none";
+      document.getElementById("registerModal").style.display = "flex";
+    });
+    document.getElementById("closeRegisterModal").addEventListener("click", () => document.getElementById("registerModal").style.display = "none");
+    document.getElementById("loginForm").addEventListener("submit", e => {
+      e.preventDefault();
+      alert("Login berhasil!");
+      document.getElementById("loginModal").style.display = "none";
+    });
+    document.getElementById("registerForm").addEventListener("submit", e => {
+      e.preventDefault();
+      alert("Registrasi berhasil!");
+      document.getElementById("registerModal").style.display = "none";
+    });
+    
+    // Auto-load Komik & Popup
+    window.onload = () => {
+      renderKomik(komikData);
+      setTimeout(() => { popup.style.display = "none"; }, 3000);
+    };
+  </script>
+</body>
+</html>
