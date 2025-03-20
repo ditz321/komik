@@ -1,524 +1,493 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>KomikPop - Website Komik Populer</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <title>Web Manga Keren</title>
   <style>
-    /* Reset & Dasar */
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: Arial, sans-serif; background: #f4f4f4; transition: background 0.3s, color 0.3s; }
-    body.dark-mode { background: #121212; color: #fff; }
-    
-    /* Header & Navigation */
-    header {
-      background: #333;
+    /* Reset & Basic */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      overflow-x: hidden;
+      position: relative;
+      transition: 0.3s;
+      background: #121212;
       color: #fff;
-      padding: 15px 20px;
+    }
+
+    /* Navbar */
+    .header {
+      position: sticky;
+      top: 0;
+      background: rgba(0, 0, 0, 0.8);
+      padding: 10px 20px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      position: sticky;
-      top: 0;
-      z-index: 999;
+      z-index: 1000;
     }
-    .logo { font-size: 24px; font-weight: bold; }
-    nav ul { list-style: none; display: flex; gap: 20px; }
-    nav ul li a { color: #fff; text-decoration: none; }
-    .menu-toggle { display: none; cursor: pointer; font-size: 24px; }
-    @media (max-width:768px) {
-      nav ul { display: none; flex-direction: column; width: 100%; background: #333; }
-      nav ul.active { display: flex; }
-      .menu-toggle { display: block; }
-    }
-    
-    /* Popup Welcome */
-    .popup {
-      background: #333;
+
+    .header nav a {
       color: #fff;
+      text-decoration: none;
+      margin-right: 15px;
+    }
+
+    .header nav a:hover {
+      text-decoration: underline;
+    }
+
+    /* Chapter Panel */
+    .chapter-panel {
+      padding: 20px;
+      background: rgba(0, 0, 0, 0.6);
+      color: #fff;
+    }
+
+    .chapter-panel h2 {
+      margin-bottom: 10px;
+    }
+
+    .chapter-panel ul {
+      list-style: none;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+      gap: 10px;
+    }
+
+    .chapter-panel ul li {
+      background: #222;
+      padding: 10px 15px;
+      cursor: pointer;
+      border-radius: 5px;
+      text-align: center;
+      transition: background 0.3s;
+    }
+
+    .chapter-panel ul li:hover {
+      background: #444;
+    }
+
+    /* Manga Viewer */
+    #mangaViewer {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.95);
+      display: none;
+      flex-direction: column;
+      z-index: 9999;
+    }
+
+    #mangaViewer.active {
+      display: flex;
+    }
+
+    #viewerHeader {
       padding: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #111;
+      color: #fff;
+    }
+
+    #viewerHeader span {
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    #mangaPage {
+      flex: 1;
+      width: 100%;
+      object-fit: contain;
+      transition: transform 0.3s;
+    }
+
+    /* Navigation Buttons */
+    #navButtons {
+      margin: 10px;
       text-align: center;
     }
-    
-    /* Filters & Search */
-    .filters {
-      display: flex;
-      justify-content: center;
-      gap: 10px;
-      padding: 20px;
-      background: #fff;
-      flex-wrap: wrap;
-    }
-    .filters input, .filters select, .filters button {
+
+    #navButtons button,
+    #fullscreenBtn,
+    #themeToggle {
       padding: 10px;
-      font-size: 16px;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-    }
-    
-    /* Cards Grid */
-    .cards {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 20px;
-      padding: 20px;
-    }
-    .card {
-      background: #fff;
-      border: 1px solid #ddd;
-      border-radius: 5px;
-      overflow: hidden;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-      cursor: pointer;
-      transition: transform 0.2s;
-    }
-    .card:hover { transform: translateY(-5px); }
-    .card img { width: 100%; height: 300px; object-fit: cover; }
-    .info { padding: 10px; }
-    .info h3 { font-size: 18px; margin-bottom: 5px; }
-    .info p { font-size: 14px; color: #666; margin-bottom: 5px; }
-    .stars { color: gold; }
-    
-    /* Pagination */
-    .pagination {
-      display: flex;
-      justify-content: center;
-      padding: 20px;
-      gap: 10px;
-    }
-    .pagination button {
-      padding: 10px 15px;
-      font-size: 16px;
-      cursor: pointer;
-      border: none;
-      background: #333;
+      margin: 0 5px;
+      background: #555;
       color: #fff;
-      border-radius: 5px;
-    }
-    .pagination button:hover { background: #555; }
-    
-    /* Modal Detail Komik */
-    .modal {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.5);
-      justify-content: center;
-      align-items: center;
-      z-index: 1000;
-    }
-    .modal-content {
-      background: #fff;
-      padding: 20px;
-      border-radius: 5px;
-      width: 90%;
-      max-width: 500px;
-      position: relative;
-    }
-    .modal-content .close {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      font-size: 24px;
+      border: none;
       cursor: pointer;
+      font-size: 16px;
     }
-    .modal-content img { width: 100%; border-radius: 5px; }
-    .modal-content p { margin: 10px 0; }
-    .modal-content .stars { color: gold; cursor: pointer; }
-    .modal-content .stars span { font-size: 24px; }
-    .modal-content button {
-      margin: 10px 0;
-      padding: 10px;
+
+    #navButtons button:hover,
+    #fullscreenBtn:hover,
+    #themeToggle:hover {
+      background: #777;
+    }
+
+    /* Loader */
+    #loader {
+      position: fixed;
+      top: 0;
+      left: 0;
       width: 100%;
-      font-size: 16px;
-      cursor: pointer;
-    }
-    /* Komentar */
-    #commentsSection { margin-top: 20px; }
-    #commentsSection h3 { margin-bottom: 10px; }
-    #commentsList { max-height: 200px; overflow-y: auto; margin-bottom: 10px; }
-    #commentsList .comment { border-bottom: 1px solid #ddd; padding: 5px 0; }
-    #commentInput { width: 100%; padding: 10px; margin-bottom: 10px; }
-    
-    /* Modal Login & Register */
-    .modal-form {
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
       display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.5);
       justify-content: center;
       align-items: center;
-      z-index: 1000;
+      z-index: 99999;
     }
-    .form-content {
+
+    #loader div {
+      width: 50px;
+      height: 50px;
+      border: 5px solid #fff;
+      border-top: 5px solid #ffcc00;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% {
+        transform: rotate(0deg);
+      }
+
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+
+    /* Progress Bar */
+    #progressBar {
+      position: fixed;
+      top: 55px;
+      left: 0;
+      height: 5px;
+      background: #ffcc00;
+      width: 0%;
+      z-index: 10000;
+    }
+
+    /* Dark/Light Mode */
+    .light-mode {
+      background: #f5f5f5;
+      color: #222;
+    }
+
+    .light-mode .header {
+      background: #e0e0e0;
+    }
+
+    .light-mode .header nav a {
+      color: #222;
+    }
+
+    .light-mode .chapter-panel {
       background: #fff;
-      padding: 20px;
-      border-radius: 5px;
-      width: 90%;
-      max-width: 400px;
-      position: relative;
+      color: #222;
     }
-    .form-content .close {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      font-size: 24px;
-      cursor: pointer;
+
+    .light-mode .chapter-panel ul li {
+      background: #ddd;
+      color: #222;
     }
-    .form-content form {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
+
+    .light-mode #viewerHeader {
+      background: #e0e0e0;
+      color: #222;
     }
-    .form-content input {
-      padding: 10px;
-      font-size: 16px;
-      border: 1px solid #ccc;
-      border-radius: 5px;
+
+    .light-mode #mangaViewer {
+      background: rgba(255, 255, 255, 0.95);
     }
-    .form-content button {
-      padding: 10px;
-      font-size: 16px;
-      cursor: pointer;
+
+    /* Particles & Gradient Background */
+    #particles {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
     }
-    
-    /* Dark Mode Overrides */
-    body.dark-mode { background: #121212; color: #fff; }
-    body.dark-mode header { background: #111; }
-    body.dark-mode .popup, body.dark-mode .filters { background: #222; }
-    body.dark-mode .card { background: #2c2c2c; border-color: #444; }
-    body.dark-mode .modal-content { background: #2c2c2c; color: #fff; }
-    body.dark-mode .form-content { background: #2c2c2c; color: #fff; }
+
+    body::before {
+      content: "";
+      position: fixed;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(-45deg, #1e1e2f, #3a3a5f, #1a1a3d, #262646);
+      background-size: 400% 400%;
+      animation: gradientMove 15s ease infinite;
+      z-index: -2;
+    }
+
+    @keyframes gradientMove {
+      0% {
+        background-position: 0% 50%;
+      }
+
+      50% {
+        background-position: 100% 50%;
+      }
+
+      100% {
+        background-position: 0% 50%;
+      }
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .header nav a {
+        display: none;
+      }
+
+      .header nav button {
+        display: block;
+      }
+
+      #navButtons button,
+      #fullscreenBtn,
+      #themeToggle {
+        padding: 8px;
+        font-size: 14px;
+      }
+    }
   </style>
 </head>
+
 <body>
-  <!-- Header & Navigation -->
-  <header>
-    <div class="logo">KomikPop</div>
+  <!-- Navbar -->
+  <div class="header">
+    <div><strong>MangaZone</strong></div>
     <nav>
-      <ul id="nav-links">
-        <li><a href="#">Beranda</a></li>
-        <li><a href="#">Favorit</a></li>
-        <li><a href="#">Genre</a></li>
-        <li><a href="#">Tentang</a></li>
-        <li><a href="#" id="loginLink">Login</a></li>
-      </ul>
-      <div class="menu-toggle" id="menu-toggle">☰</div>
+      <a href="#">Home</a>
+      <a href="#">Chapter</a>
+      <a href="#">About</a>
+      <button id="themeToggle">Dark Mode</button>
     </nav>
-  </header>
-  
-  <!-- Popup Welcome -->
-  <div class="popup" id="popup">Selamat datang di KomikPop!</div>
-  
-  <!-- Filters & Search -->
-  <div class="filters">
-    <input type="text" id="searchInput" placeholder="Cari Komik...">
-    <select id="genreFilter">
-      <option value="all">Semua Genre</option>
-      <option value="action">Action</option>
-      <option value="romance">Romance</option>
-      <option value="isekai">Isekai</option>
-      <option value="comedy">Comedy</option>
-    </select>
-    <button id="darkToggle">Dark Mode</button>
   </div>
-  
-  <!-- Cards List -->
-  <div class="cards" id="komikList"></div>
-  
-  <!-- Pagination -->
-  <div class="pagination" id="pagination"></div>
-  
-  <!-- Modal Detail Komik -->
-  <div class="modal" id="komikModal">
-    <div class="modal-content">
-      <span class="close" id="closeModal">&times;</span>
-      <h2 id="modalTitle"></h2>
-      <img id="modalImage" src="" alt="Cover">
-      <p id="modalDesc"></p>
-      <div id="modalRating"></div>
-      <button id="favBtn">Tambah ke Favorit</button>
-      <div id="shareButtons">
-        <button id="shareFacebook">Share ke Facebook</button>
-        <button id="shareTwitter">Share ke Twitter</button>
-      </div>
-      <div id="commentsSection">
-        <h3>Komentar</h3>
-        <div id="commentsList"></div>
-        <textarea id="commentInput" placeholder="Tulis komentar..."></textarea>
-        <button id="submitComment">Kirim Komentar</button>
+
+  <!-- Chapter List -->
+  <div class="chapter-panel">
+    <h2>Daftar Chapter</h2>
+    <ul>
+      <li onclick="openViewer()">Chapter 1</li>
+      <li onclick="openViewer()">Chapter 2</li>
+      <li onclick="openViewer()">Chapter 3</li>
+    </ul>
+  </div>
+
+  <!-- Manga Viewer -->
+  <div id="mangaViewer">
+    <div id="viewerHeader">
+      <span>Chapter 1</span>
+      <div id="navButtons">
+        <button onclick="prevPage()">Prev</button>
+        <button onclick="nextPage()">Next</button>
+        <button onclick="closeViewer()">Close</button>
+        <button id="fullscreenBtn" onclick="toggleFullscreen()">Fullscreen</button>
       </div>
     </div>
+    <img id="mangaPage" loading="lazy" src="" alt="Manga Page">
   </div>
-  
-  <!-- Modal Login -->
-  <div class="modal-form" id="loginModal">
-    <div class="form-content">
-      <span class="close" id="closeLoginModal">&times;</span>
-      <h2>Login</h2>
-      <form id="loginForm">
-        <input type="text" id="username" placeholder="Username" required>
-        <input type="password" id="password" placeholder="Password" required>
-        <button type="submit">Login</button>
-      </form>
-      <p>Belum punya akun? <a href="#" id="registerLink">Daftar di sini</a></p>
-    </div>
+
+  <!-- Loader -->
+  <div id="loader">
+    <div></div>
   </div>
-  
-  <!-- Modal Register -->
-  <div class="modal-form" id="registerModal">
-    <div class="form-content">
-      <span class="close" id="closeRegisterModal">&times;</span>
-      <h2>Register</h2>
-      <form id="registerForm">
-        <input type="text" id="regUsername" placeholder="Username" required>
-        <input type="email" id="regEmail" placeholder="Email" required>
-        <input type="password" id="regPassword" placeholder="Password" required>
-        <button type="submit">Daftar</button>
-      </form>
-    </div>
-  </div>
-  
+
+  <!-- Progress Bar -->
+  <div id="progressBar"></div>
+
+  <!-- Particles Canvas -->
+  <canvas id="particles"></canvas>
+
+  <!-- Script -->
   <script>
-    // Data Komik (dengan cerita lengkap)
-    const komikData = [
-      {
-        title: "One Piece",
-        genre: "action",
-        img: "https://upload.wikimedia.org/wikipedia/en/6/65/One_Piece_Logo.png",
-        desc: "One Piece menceritakan petualangan Monkey D. Luffy, bajak laut muda dengan tubuh karet, yang berlayar mencari harta karun legendaris 'One Piece' demi menjadi Raja Bajak Laut. Dalam perjalanannya, ia bertemu dengan berbagai karakter unik, menghadapi musuh kuat, dan mengungkap misteri dunia yang luas bersama kru Topi Jerami.",
-        rating: 5
-      },
-      {
-        title: "Naruto",
-        genre: "action",
-        img: "https://upload.wikimedia.org/wikipedia/id/9/94/NarutoCoverTankobon1.jpg",
-        desc: "Naruto mengikuti perjalanan Naruto Uzumaki, seorang ninja yang dikucilkan karena tersegel dalam dirinya rubah berekor sembilan. Dengan tekad kuat untuk menjadi Hokage dan mendapatkan pengakuan, Naruto menghadapi berbagai tantangan dan musuh demi melindungi desanya.",
-        rating: 5
-      },
-      {
-        title: "Komi-san wa Komyushou desu",
-        genre: "comedy",
-        img: "https://upload.wikimedia.org/wikipedia/en/2/2d/Komi-san_wa%2C_Comyush%C5%8D_desu%2C_volume_1_cover.jpg",
-        desc: "Komi-san wa Komyushou desu mengisahkan Komi Shouko, siswi cantik yang memiliki kesulitan berkomunikasi. Dengan bantuan teman sekelasnya, Tadano Hitohito, ia berusaha mengatasi hambatan sosialnya dan mencapai impian memiliki 100 teman.",
-        rating: 4
-      },
-      {
-        title: "Solo Leveling",
-        genre: "action",
-        img: "https://upload.wikimedia.org/wikipedia/en/0/02/Solo_Leveling_Manhwa_Volume_1.jpg",
-        desc: "Solo Leveling bercerita tentang Sung Jin-Woo, hunter terlemah yang mendapatkan kekuatan misterius setelah mengalami kejadian aneh. Dengan kekuatan baru tersebut, ia berjuang menjadi hunter terkuat dan mengungkap rahasia dungeon yang penuh monster.",
-        rating: 5
-      },
-      {
-        title: "Your Name",
-        genre: "romance",
-        img: "https://upload.wikimedia.org/wikipedia/en/0/0b/Your_Name_poster.png",
-        desc: "Your Name mengisahkan pertemuan ajaib antara Mitsuha dan Taki, dua remaja yang saling bertukar tubuh secara misterius. Ikatan yang terjalin membawa mereka mencari satu sama lain dan mengungkap rahasia yang menghubungkan nasib mereka.",
-        rating: 5
-      },
-      {
-        title: "Re:Zero",
-        genre: "isekai",
-        img: "https://upload.wikimedia.org/wikipedia/en/1/1c/Re_Zero_Volume_1.png",
-        desc: "Re:Zero mengikuti Subaru Natsuki, seorang remaja yang tiba-tiba terjebak di dunia paralel. Setiap kali ia mati, Subaru kembali ke titik tertentu, memberinya kesempatan untuk mengubah nasib, sekaligus menghadapi bahaya dan intrik di dunia baru yang penuh sihir.",
-        rating: 4
-      },
-      {
-        title: "Kaguya-sama",
-        genre: "comedy",
-        img: "https://upload.wikimedia.org/wikipedia/en/c/c9/Kaguya-sama_Wants_to_Be_Confessed_To_volume_1_cover.jpg",
-        desc: "Kaguya-sama: Love is War mengisahkan pertarungan psikologis antara Kaguya Shinomiya dan Miyuki Shirogane, dua anggota dewan OSIS yang sangat cerdas. Mereka saling berusaha membuat yang lain menyatakan perasaan terlebih dahulu, menghasilkan situasi lucu dan penuh strategi cerdik.",
-        rating: 4
-      },
-      {
-        title: "Sword Art Online",
-        genre: "isekai",
-        img: "https://upload.wikimedia.org/wikipedia/en/0/05/Sword_Art_Online_light_novel_volume_1.png",
-        desc: "Sword Art Online mengikuti Kirito, pemain game VRMMO yang terjebak dalam dunia virtual di mana kematian dalam game berarti kematian di dunia nyata. Bersama teman-temannya, Kirito berjuang untuk keluar dari game tersebut dan menyelamatkan nyawa mereka.",
-        rating: 4
-      },
-      {
-        title: "Horimiya",
-        genre: "romance",
-        img: "https://upload.wikimedia.org/wikipedia/en/7/74/Horimiya_volume_1_cover.jpg",
-        desc: "Horimiya menceritakan kisah dua siswa SMA, Hori dan Miyamura, yang pada awalnya tampak berbeda. Seiring berjalannya waktu, mereka menemukan sisi tersembunyi satu sama lain dan membangun hubungan yang hangat serta penuh kejujuran.",
-        rating: 4
-      },
-      {
-        title: "Attack on Titan",
-        genre: "action",
-        img: "https://upload.wikimedia.org/wikipedia/en/7/70/Shingeki_no_Kyojin_manga_volume_1.jpg",
-        desc: "Attack on Titan berlatar di dunia di mana umat manusia hidup dalam tembok besar untuk melindungi diri dari serangan Titan, makhluk raksasa yang memangsa manusia. Cerita mengikuti Eren Yeager dan kawan-kawannya dalam perjuangan epik untuk mengungkap kebenaran dan membebaskan umat manusia.",
-        rating: 5
-      }
+    // Array of dummy pages, ganti dengan URL gambar manga asli
+    const pages = [
+      "https://via.placeholder.com/800x1200?text=Page+1",
+      "https://via.placeholder.com/800x1200?text=Page+2",
+      "https://via.placeholder.com/800x1200?text=Page+3"
     ];
-    
-    // Elemen DOM
-    const komikList = document.getElementById("komikList");
-    const searchInput = document.getElementById("searchInput");
-    const genreFilter = document.getElementById("genreFilter");
-    const darkToggle = document.getElementById("darkToggle");
-    const menuToggle = document.getElementById("menu-toggle");
-    const navLinks = document.getElementById("nav-links");
-    const popup = document.getElementById("popup");
-    const pagination = document.getElementById("pagination");
-    
-    // Modal Detail Komik
-    const modal = document.getElementById("komikModal");
-    const modalTitle = document.getElementById("modalTitle");
-    const modalImage = document.getElementById("modalImage");
-    const modalDesc = document.getElementById("modalDesc");
-    const modalRating = document.getElementById("modalRating");
-    const favBtn = document.getElementById("favBtn");
-    const shareFacebook = document.getElementById("shareFacebook");
-    const shareTwitter = document.getElementById("shareTwitter");
-    const commentsList = document.getElementById("commentsList");
-    const commentInput = document.getElementById("commentInput");
-    const submitComment = document.getElementById("submitComment");
-    const closeModal = document.getElementById("closeModal");
-    
-    // Modal Login & Register
-    const loginLink = document.getElementById("loginLink");
-    const loginModal = document.getElementById("loginModal");
-    const closeLoginModal = document.getElementById("closeLoginModal");
-    const registerLink = document.getElementById("registerLink");
-    const registerModal = document.getElementById("registerModal");
-    const closeRegisterModal = document.getElementById("closeRegisterModal");
-    
-    // Pagination variables
-    const itemsPerPage = 4;
-    let currentPage = 1;
-    let filteredData = [...komikData];
-    
-    // Render Komik Cards dengan Pagination
-    function renderKomik(data) {
-      komikList.innerHTML = "";
-      const start = (currentPage - 1) * itemsPerPage;
-      const end = start + itemsPerPage;
-      const paginatedItems = data.slice(start, end);
-      paginatedItems.forEach(komik => {
-        const card = document.createElement("div");
-        card.classList.add("card");
-        card.innerHTML = `
-          <img src="${komik.img}" alt="${komik.title}">
-          <div class="info">
-            <h3>${komik.title}</h3>
-            <p>${komik.genre}</p>
-            <div class="stars">${'★'.repeat(komik.rating)}${'☆'.repeat(5 - komik.rating)}</div>
-          </div>
-        `;
-        card.onclick = () => showModal(komik);
-        komikList.appendChild(card);
-      });
-      renderPagination(data);
+    let currentPage = 0;
+
+    // Open Viewer (dengan loader)
+    function openViewer() {
+      const loader = document.getElementById('loader');
+      loader.style.display = 'flex';
+      setTimeout(() => {
+        loader.style.display = 'none';
+        document.getElementById('mangaViewer').classList.add('active');
+        currentPage = 0;
+        document.getElementById('mangaPage').src = pages[currentPage];
+        updateProgress();
+      }, 800);
     }
-    
-    // Render Pagination Buttons
-    function renderPagination(data) {
-      pagination.innerHTML = "";
-      const totalPages = Math.ceil(data.length / itemsPerPage);
-      for (let i = 1; i <= totalPages; i++) {
-        const btn = document.createElement("button");
-        btn.textContent = i;
-        if (i === currentPage) btn.style.background = "#555";
-        btn.onclick = () => { currentPage = i; renderKomik(filteredData); };
-        pagination.appendChild(btn);
-      }
+
+    // Close Viewer
+    function closeViewer() {
+      document.getElementById('mangaViewer').classList.remove('active');
+      document.getElementById('progressBar').style.width = '0%';
     }
-    
-    // Show Modal Detail Komik
-    function showModal(komik) {
-      modalTitle.textContent = komik.title;
-      modalImage.src = komik.img;
-      modalDesc.textContent = komik.desc;
-      modalRating.innerHTML = generateStars(komik.rating);
-      // Load komentar dari localStorage
-      commentsList.innerHTML = localStorage.getItem(komik.title + "_comments") || "";
-      modal.style.display = "flex";
-      // Set tombol share
-      shareFacebook.onclick = () => window.open("https://www.facebook.com/sharer/sharer.php?u=" + encodeURIComponent(window.location.href + "?komik=" + komik.title));
-      shareTwitter.onclick = () => window.open("https://twitter.com/intent/tweet?url=" + encodeURIComponent(window.location.href + "?komik=" + komik.title));
-      favBtn.onclick = () => addToFavorites(komik);
-      submitComment.onclick = () => submitNewComment(komik);
-    }
-    
-    // Generate Stars Rating HTML
-    function generateStars(rating) {
-      let starsHTML = "";
-      for (let i = 1; i <= 5; i++) {
-        starsHTML += `<span class="star ${i <= rating ? 'filled' : ''}" data-rating="${i}">★</span>`;
-      }
-      return starsHTML;
-    }
-    
-    // Add to Favorites
-    function addToFavorites(komik) {
-      let favorites = JSON.parse(localStorage.getItem("favorites")) || [];
-      if (!favorites.some(fav => fav.title === komik.title)) {
-        favorites.push(komik);
-        localStorage.setItem("favorites", JSON.stringify(favorites));
-        alert(`"${komik.title}" ditambahkan ke Favorit!`);
+
+    // Next Page
+    function nextPage() {
+      if (currentPage < pages.length - 1) {
+        currentPage++;
+        document.getElementById('mangaPage').src = pages[currentPage];
+        updateProgress();
       } else {
-        alert(`"${komik.title}" sudah ada di Favorit!`);
+        alert('Ini halaman terakhir!');
       }
     }
-    
-    // Submit Comment
-    function submitNewComment(komik) {
-      const commentText = commentInput.value.trim();
-      if (commentText !== "") {
-        const commentHTML = `<div class="comment"><strong>User:</strong> ${commentText}</div>`;
-        commentsList.innerHTML += commentHTML;
-        localStorage.setItem(komik.title + "_comments", commentsList.innerHTML);
-        commentInput.value = "";
+
+    // Previous Page
+    function prevPage() {
+      if (currentPage > 0) {
+        currentPage--;
+        document.getElementById('mangaPage').src = pages[currentPage];
+        updateProgress();
+      } else {
+        alert('Ini halaman pertama!');
       }
     }
-    
-    // Filter Komik (Search & Genre)
-    function filterKomik() {
-      const searchValue = searchInput.value.toLowerCase();
-      const selectedGenre = genreFilter.value;
-      filteredData = komikData.filter(k => {
-        return (k.title.toLowerCase().includes(searchValue) || k.desc.toLowerCase().includes(searchValue)) &&
-               (selectedGenre === "all" || k.genre === selectedGenre);
-      });
-      currentPage = 1;
-      renderKomik(filteredData);
+
+    // Update Progress Bar
+    function updateProgress() {
+      const percent = ((currentPage + 1) / pages.length) * 100;
+      document.getElementById('progressBar').style.width = percent + '%';
     }
-    
-    // Event Listeners
-    searchInput.addEventListener("input", filterKomik);
-    genreFilter.addEventListener("change", filterKomik);
-    darkToggle.addEventListener("click", () => document.body.classList.toggle("dark-mode"));
-    menuToggle.addEventListener("click", () => navLinks.classList.toggle("active"));
-    document.getElementById("closeModal").addEventListener("click", () => modal.style.display = "none");
-    
-    // Login & Register Modal Events
-    loginLink.addEventListener("click", () => document.getElementById("loginModal").style.display = "flex");
-    document.getElementById("closeLoginModal").addEventListener("click", () => document.getElementById("loginModal").style.display = "none");
-    registerLink.addEventListener("click", () => {
-      document.getElementById("loginModal").style.display = "none";
-      document.getElementById("registerModal").style.display = "flex";
-    });
-    document.getElementById("closeRegisterModal").addEventListener("click", () => document.getElementById("registerModal").style.display = "none");
-    document.getElementById("loginForm").addEventListener("submit", e => {
-      e.preventDefault();
-      alert("Login berhasil!");
-      document.getElementById("loginModal").style.display = "none";
-    });
-    document.getElementById("registerForm").addEventListener("submit", e => {
-      e.preventDefault();
-      alert("Registrasi berhasil!");
-      document.getElementById("registerModal").style.display = "none";
-    });
-    
-    // Auto-load Komik & Popup
-    window.onload = () => {
-      renderKomik(komikData);
-      setTimeout(() => { popup.style.display = "none"; }, 3000);
+
+    // Dark/Light Mode Toggle
+    document.getElementById('themeToggle').onclick = () => {
+      document.body.classList.toggle('light-mode');
+      document.getElementById('themeToggle').innerText =
+        document.body.classList.contains('light-mode') ? "Dark Mode" : "Light Mode";
     };
+
+    // Fullscreen Mode
+    function toggleFullscreen() {
+      const elem = document.getElementById('mangaViewer');
+      if (!document.fullscreenElement) {
+        elem.requestFullscreen().catch(err => { alert(`Error: ${err.message}`); });
+      } else {
+        document.exitFullscreen();
+      }
+    }
+
+    // Swipe & Pinch to Zoom
+    let touchStartX = 0, touchEndX = 0, scale = 1, startDistance = 0;
+    const viewer = document.getElementById('mangaViewer');
+    const img = document.getElementById('mangaPage');
+
+    // Swipe
+    viewer.addEventListener('touchstart', e => {
+      if (e.touches.length === 1) {
+        touchStartX = e.changedTouches[0].screenX;
+      }
+    });
+
+    viewer.addEventListener('touchend', e => {
+      if (e.changedTouches.length === 1) {
+        touchEndX = e.changedTouches[0].screenX;
+        handleSwipe();
+      }
+    });
+
+    function handleSwipe() {
+      if (touchEndX < touchStartX - 50) {
+        nextPage();
+      }
+      if (touchEndX > touchStartX + 50) {
+        prevPage();
+      }
+    }
+
+    // Pinch to Zoom
+    viewer.addEventListener('touchmove', function (e) {
+      if (e.touches.length === 2) {
+        e.preventDefault();
+        let dist = getDistance(e.touches[0], e.touches[1]);
+        if (!startDistance) {
+          startDistance = dist;
+        } else {
+          scale = dist / startDistance;
+          if (scale < 1) scale = 1;
+          if (scale > 3) scale = 3;
+          img.style.transform = `scale(${scale})`;
+        }
+      }
+    }, { passive: false });
+
+    viewer.addEventListener('touchend', function (e) {
+      if (e.touches.length < 2) {
+        startDistance = 0;
+      }
+    });
+
+    function getDistance(touch1, touch2) {
+      let dx = touch2.pageX - touch1.pageX;
+      let dy = touch2.pageY - touch1.pageY;
+      return Math.sqrt(dx * dx + dy * dy);
+    }
+
+    // Particles Effect
+    const canvas = document.getElementById('particles');
+    const ctx = canvas.getContext('2d');
+    let particlesArray;
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    window.addEventListener('resize', () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    });
+
+    function createParticles() {
+      particlesArray = [];
+      for (let i = 0; i < 80; i++) {
+        particlesArray.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height,
+          radius: Math.random() * 2 + 1,
+          dx: (Math.random() - 0.5) * 0.5,
+          dy: (Math.random() - 0.5) * 0.5
+        });
+      }
+    }
+
+    function animateParticles() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      for (let p of particlesArray) {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+        ctx.fill();
+        p.x += p.dx;
+        p.y += p.dy;
+        if (p.x < 0 || p.x > canvas.width) p.dx *= -1;
+        if (p.y < 0 || p.y > canvas.height) p.dy *= -1;
+      }
+      requestAnimationFrame(animateParticles);
+    }
+
+    createParticles();
+    animateParticles();
   </script>
 </body>
+
 </html>
