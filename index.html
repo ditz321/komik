@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Web Manga Keren</title>
+  <style>
+    /* Reset & Basic */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      overflow-x: hidden;
+      position: relative;
+      transition: 0.3s;
+      background: #121212;
+      color: #fff;
+    }
+
+    /* Navbar */
+    .header {
+      position: sticky;
+      top: 0;
+      background: rgba(0, 0, 0, 0.8);
+      padding: 10px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    .header nav a {
+      color: #fff;
+      text-decoration: none;
+      margin-right: 15px;
+    }
+
+    .header nav a:hover {
+      text-decoration: underline;
+    }
+
+    /* Chapter Panel */
+    .chapter-panel {
+      padding: 20px;
+      background: rgba(0, 0, 0, 0.6);
+      color: #fff;
+    }
+
+    .chapter-panel h2 {
+      margin-bottom: 10px;
+    }
+
+    .chapter-panel ul {
+      list-style: none;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+      gap: 10px;
+    }
+
+    .chapter-panel ul li {
+      background: #222;
+      padding: 10px 15px;
+      cursor: pointer;
+      border-radius: 5px;
+      text-align: center;
+      transition: background 0.3s;
+    }
+
+    .chapter-panel ul li:hover {
+      background: #444;
+    }
+
+    /* Manga Viewer */
+    #mangaViewer {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.95);
+      display: none;
+      flex-direction: column;
+      z-index: 9999;
+    }
+
+    #mangaViewer.active {
+      display: flex;
+    }
+
+    #viewerHeader {
+      padding: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #111;
+      color: #fff;
+    }
+
+    #viewerHeader span {
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    #mangaPage {
+      flex: 1;
+      width: 100%;
+      object-fit: contain;
+      transition: transform 0.3s;
+    }
+
+    /* Navigation Buttons */
+    #navButtons {
+      margin: 10px;
+      text-align: center;
+    }
+
+    #navButtons button,
+    #fullscreenBtn,
+    #themeToggle {
+      padding: 10px;
+      margin: 0 5px;
+      background: #555;
+      color: #fff;
+      border: none;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    #navButtons button:hover,
+    #fullscreenBtn:hover,
+    #themeToggle:hover {
+      background: #777;
+    }
+
+    /* Loader */
+    #loader {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 99999;
+    }
+
+    #loader div {
+      width: 50px;
+      height: 50px;
+      border: 5px solid #fff;
+      border-top: 5px solid #ffcc00;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% {
+        transform: rotate(0deg);
+      }
+
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+
+    /* Progress Bar */
+    #progressBar {
+      position: fixed;
+      top: 55px;
+      left: 0;
+      height: 5px;
+      background: #ffcc00;
+      width: 0%;
+      z-index: 10000;
+    }
+
+    /* Dark/Light Mode */
+    .light-mode {
+      background: #f5f5f5;
+      color: #222;
+    }
+
+    .light-mode .header {
+      background: #e0e0e0;
+    }
+
+    .light-mode .header nav a {
+      color: #222;
+    }
+
+    .light-mode .chapter-panel {
+      background: #fff;
+      color: #222;
+    }
+
+    .light-mode .chapter-panel ul li {
+      background: #ddd;
+      color: #222;
+    }
+
+    .light-mode #viewerHeader {
+      background: #e0e0e0;
+      color: #222;
+    }
+
+    .light-mode #mangaViewer {
+      background: rgba(255, 255, 255, 0.95);
+    }
+
+    /* Particles & Gradient Background */
+    #particles {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(-45deg, #1e1e2f, #3a3a5f, #1a1a3d, #262646);
+      background-size: 400% 400%;
+      animation: gradientMove 15s ease infinite;
+      z-index: -2;
+    }
+
+    @keyframes gradientMove {
+      0% {
+        background-position: 0% 50%;
+      }
+
+      50% {
+        background-position: 100% 50%;
+      }
+
+      100% {
+        background-position: 0% 50%;
+      }
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .header nav a {
+        display: none;
+      }
+
+      .header nav button {
+        display: block;
+      }
+
+      #navButtons button,
+      #fullscreenBtn,
+      #themeToggle {
+        padding: 8px;
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Navbar -->
+  <div class="header">
+    <div><strong>MangaZone</strong></div>
+    <nav>
+      <a href="#">Home</a>
+      <a href="#">Chapter</a>
+      <a href="#">About</a>
+      <button id="themeToggle">Dark Mode</button>
+    </nav>
+  </div>
+
+  <!-- Chapter List -->
+  <div class="chapter-panel">
+    <h2>Daftar Chapter</h2>
+    <ul>
+      <li onclick="openViewer()">Chapter 1</li>
+      <li onclick="openViewer()">Chapter 2</li>
+      <li onclick="openViewer()">Chapter 3</li>
+    </ul>
+  </div>
+
+  <!-- Manga Viewer -->
+  <div id="mangaViewer">
+    <div id="viewerHeader">
+      <span>Chapter 1</span>
+      <div id="navButtons">
+        <button onclick="prevPage()">Prev</button>
+        <button onclick="nextPage()">Next</button>
+        <button onclick="closeViewer()">Close</button>
+        <button id="fullscreenBtn" onclick="toggleFullscreen()">Fullscreen</button>
+      </div>
+    </div>
+    <img id="mangaPage" loading="lazy" src="" alt="Manga Page">
+  </div>
+
+  <!-- Loader -->
+  <div id="loader">
+    <div></div>
+  </div>
+
+  <!-- Progress Bar -->
+  <div id="progressBar"></div>
+
+  <!-- Particles Canvas -->
+  <canvas id="particles"></canvas>
+
+  <!-- Script -->
+  <script>
+    // Array of dummy pages, ganti dengan URL gambar manga asli
+    const pages = [
+      "https://via.placeholder.com/800x1200?text=Page+1",
+      "https://via.placeholder.com/800x1200?text=Page+2",
+      "https://via.placeholder.com/800x1200?text=Page+3"
+    ];
+    let currentPage = 0;
+
+    // Open Viewer (dengan loader)
+    function openViewer() {
+      const loader = document.getElementById('loader');
+      loader.style.display = 'flex';
+      setTimeout(() => {
+        loader.style.display = 'none';
+        document.getElementById('mangaViewer').classList.add('active');
+        currentPage = 0;
+        document.getElementById('mangaPage').src = pages[currentPage];
+        updateProgress();
+      }, 800);
+    }
+
+    // Close Viewer
+    function closeViewer() {
+      document.getElementById('mangaViewer').classList.remove('active');
+      document.getElementById('progressBar').style.width = '0%';
+    }
+
+    // Next Page
+    function nextPage() {
+      if (currentPage < pages.length - 1) {
+        currentPage++;
+        document.getElementById('mangaPage').src = pages[currentPage];
+        updateProgress();
+      } else {
+        alert('Ini halaman terakhir!');
+      }
+    }
+
+    // Previous Page
+    function prevPage() {
+      if (currentPage > 0) {
+        currentPage--;
+        document.getElementById('mangaPage').src = pages[currentPage];
+        updateProgress();
+      } else {
+        alert('Ini halaman pertama!');
+      }
+    }
+
+    // Update Progress Bar
+    function updateProgress() {
+      const percent = ((currentPage + 1) / pages.length) * 100;
+      document.getElementById('progressBar').style.width = percent + '%';
+    }
+
+    // Dark/Light Mode Toggle
+    document.getElementById('themeToggle').onclick = () => {
+      document.body.classList.toggle('light-mode');
+      document.getElementById('themeToggle').innerText =
+        document.body.classList.contains('light-mode') ? "Dark Mode" : "Light Mode";
+    };
+
+    // Fullscreen Mode
+    function toggleFullscreen() {
+      const elem = document.getElementById('mangaViewer');
+      if (!document.fullscreenElement) {
+        elem.requestFullscreen().catch(err => { alert(`Error: ${err.message}`); });
+      } else {
+        document.exitFullscreen();
+      }
+    }
+
+    // Swipe & Pinch to Zoom
+    let touchStartX = 0, touchEndX = 0, scale = 1, startDistance = 0;
+    const viewer = document.getElementById('mangaViewer');
+    const img = document.getElementById('mangaPage');
+
+    // Swipe
+    viewer.addEventListener('touchstart', e => {
+      if (e.touches.length === 1) {
+        touchStartX = e.changedTouches[0].screenX;
+      }
+    });
+
+    viewer.addEventListener('touchend', e => {
+      if (e.changedTouches.length === 1) {
+        touchEndX = e.changedTouches[0].screenX;
+        handleSwipe();
+      }
+    });
+
+    function handleSwipe() {
+      if (touchEndX < touchStartX - 50) {
+        nextPage();
+      }
+      if (touchEndX > touchStartX + 50) {
+        prevPage();
+      }
+    }
+
+    // Pinch to Zoom
+    viewer.addEventListener('touchmove', function (e) {
+      if (e.touches.length === 2) {
+        e.preventDefault();
+        let dist = getDistance(e.touches[0], e.touches[1]);
+        if (!startDistance) {
+          startDistance = dist;
+        } else {
+          scale = dist / startDistance;
+          if (scale < 1) scale = 1;
+          if (scale > 3) scale = 3;
+          img.style.transform = `scale(${scale})`;
+        }
+      }
+    }, { passive: false });
+
+    viewer.addEventListener('touchend', function (e) {
+      if (e.touches.length < 2) {
+        startDistance = 0;
+      }
+    });
+
+    function getDistance(touch1, touch2) {
+      let dx = touch2.pageX - touch1.pageX;
+      let dy = touch2.pageY - touch1.pageY;
+      return Math.sqrt(dx * dx + dy * dy);
+    }
+
+    // Particles Effect
+    const canvas = document.getElementById('particles');
+    const ctx = canvas.getContext('2d');
+    let particlesArray;
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    window.addEventListener('resize', () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    });
+
+    function createParticles() {
+      particlesArray = [];
+      for (let i = 0; i < 80; i++) {
+        particlesArray.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height,
+          radius: Math.random() * 2 + 1,
+          dx: (Math.random() - 0.5) * 0.5,
+          dy: (Math.random() - 0.5) * 0.5
+        });
+      }
+    }
+
+    function animateParticles() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      for (let p of particlesArray) {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+        ctx.fill();
+        p.x += p.dx;
+        p.y += p.dy;
+        if (p.x < 0 || p.x > canvas.width) p.dx *= -1;
+        if (p.y < 0 || p.y > canvas.height) p.dy *= -1;
+      }
+      requestAnimationFrame(animateParticles);
+    }
+
+    createParticles();
+    animateParticles();
+  </script>
+</body>
+
+</html>
